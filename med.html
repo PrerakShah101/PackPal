@@ -364,6 +364,35 @@
                 display: none;
             }
         }
+        /* Add this new style for the submit button */
+        .submit-medicine-btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background-color: #FF6B6B;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            margin-top: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+        }
+
+        .submit-medicine-btn:hover {
+            background-color: #E55A5A;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255, 107, 107, 0.4);
+        }
+
+        .submit-medicine-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+        }
+
     </style>
 </head>
 <body>
@@ -693,6 +722,8 @@
                 </div>
             </div>
         </div>
+        <!-- Add the new submit button at the bottom -->
+        <button class="submit-medicine-btn" id="submit-medicine">Save & Continue to Packing List</button>
     </div>
 
     <script>
@@ -822,6 +853,30 @@
                     addBtn.click();
                 }
             });
+        });
+        // Add this new function to handle the submit button
+        document.getElementById('submit-medicine').addEventListener('click', function() {
+            // Get all checked medicine items
+            const checkedItems = [];
+            document.querySelectorAll('.checkbox-container input[type="checkbox"]:checked').forEach(checkbox => {
+                const medicineItem = checkbox.closest('.medicine-item');
+                const name = medicineItem.querySelector('.medicine-name').textContent;
+                const desc = medicineItem.querySelector('.medicine-desc')?.textContent || '';
+                checkedItems.push({ name, desc });
+            });
+
+            // Store the selected medicines in localStorage
+            localStorage.setItem('selectedMedicines', JSON.stringify(checkedItems));
+            
+            // Redirect to the progress page
+            window.location.href = 'progress.html';
+        });
+
+        // Also allow submitting by pressing Enter key
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('submit-medicine').click();
+            }
         });
     </script>
 </body>
