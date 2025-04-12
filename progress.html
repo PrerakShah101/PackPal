@@ -1005,6 +1005,32 @@
             
             // Initialize with casual style
             document.querySelector('.style-option[data-style="casual"]').click();
+
+            // Add this new code to display selected medicines
+            const selectedMedicines = JSON.parse(localStorage.getItem('selectedMedicines')) || [];
+            const medicineList = document.getElementById('medicine-list');
+            
+            if (selectedMedicines.length > 0) {
+                selectedMedicines.forEach((medicine, index) => {
+                    const checklistItem = document.createElement('div');
+                    checklistItem.className = 'checklist-item';
+                    checklistItem.innerHTML = `
+                        <input type="checkbox" class="checkbox" id="med-${index}">
+                        <label for="med-${index}" class="item-label">
+                            ${medicine.name}
+                            ${medicine.desc ? `<div class="medicine-desc">${medicine.desc}</div>` : ''}
+                            <div class="assigned-to">Assigned to: You</div>
+                        </label>
+                    `;
+                    medicineList.appendChild(checklistItem);
+                });
+            } else {
+                medicineList.innerHTML = '<p>No medicines selected yet.</p>';
+            }
+
+            // Update progress bar with the new items
+            addCheckboxListeners();
+            updateProgress(); 
         });
     </script>
 </body>
