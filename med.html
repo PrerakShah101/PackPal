@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PackPal - Medicine Checklist</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            background-color: #FFF5F5;
+            color: #333;
+            line-height: 1.6;
+            padding: 0;
+            background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M20,20 Q30,10 40,20 T60,20 T80,20" stroke="%23FFD6D6" fill="none" stroke-width="2"/></svg>');
+            background-size: 200px;
+            background-repeat: repeat;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background-color: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 5px 20px rgba(255, 107, 107, 0.1);
+            border: 2px solid #FFD6D6;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: "";
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border: 2px dashed #FFB3B3;
+            border-radius: 25px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        h1 {
+            color: #FF6B6B;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            position: relative;
+            display: inline-block;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        h1::after {
+            content: "";
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #FFB3B3, #FF6B6B, #FFB3B3);
+            border-radius: 3px;
+        }
+
+        .medicine-type-selector {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .medicine-btn {
+            padding: 12px 25px;
+            background-color: #FFE5E5;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            color: #FF6B6B;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.1);
+            border: 1px solid #FFD1D1;
+            font-size: 1rem;
+        }
+
+        .medicine-btn.active {
+            background-color: #FF6B6B;
+            color: white;
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
+        }
+
+        .medicine-categories {
+            display: none;
+        }
+
+        .medicine-categories.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .category-section {
+            margin-bottom: 30px;
+            background-color: #FFF9F9;
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid #FFD6D6;
+            position: relative;
+            box-shadow: 0 3px 10px rgba(255, 107, 107, 0.05);
+        }
+
+        .category-section::before {
+            content: "";
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23FF6B6B"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>');
+            background-size: contain;
+            opacity: 0.2;
+        }
+
+        .category-title {
+            color: #FF6B6B;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .category-title h2 {
+            font-size: 1.5rem;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: #FF6B6B;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #FFE5E5;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-btn:hover {
+            background-color: #FFD1D1;
+        }
+
+        .medicine-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .medicine-item {
+            background-color: white;
+            padding: 18px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.08);
+            border: 1px solid #FFE5E5;
+            transition: all 0.3s ease;
+        }
+
+        .medicine-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.12);
+        }
+
+        .medicine-info {
+            flex-grow: 1;
+        }
+
+        .medicine-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #FF6B6B;
+            font-size: 1.1rem;
+        }
+
+        .medicine-desc {
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .checkbox-container {
+            margin-left: 15px;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border: 2px solid #FFB3B3;
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .checkbox-container input[type="checkbox"]:checked {
+            background-color: #FF6B6B;
+            border-color: #FF6B6B;
+        }
+
+        .checkbox-container input[type="checkbox"]:checked::after {
+            content: "✓";
+            position: absolute;
+            color: white;
+            font-size: 14px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .recommended-dropdown {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid #FFD1D1;
+            margin-top: 15px;
+            background-color: white;
+            color: #FF6B6B;
+            font-weight: 500;
+            font-size: 1rem;
+        }
+
+        .recommended-dropdown:focus {
+            outline: none;
+            border-color: #FF6B6B;
+            box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.2);
+        }
+
+        .add-custom-btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background-color: #FFE5E5;
+            border: none;
+            border-radius: 8px;
+            color: #FF6B6B;
+            font-weight: 600;
+            margin-top: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .add-custom-btn:hover {
+            background-color: #FFD1D1;
+        }
+
+        .custom-medicine-input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
+            border: 1px solid #FFD1D1;
+            margin-top: 10px;
+            display: none;
+            color: #FF6B6B;
+            font-size: 1rem;
+        }
+
+        .custom-medicine-input:focus {
+            outline: none;
+            border-color: #FF6B6B;
+            box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.2);
+        }
+
+        .add-custom-medicine-btn {
+            width: 100%;
+            padding: 14px;
+            background-color: #FF6B6B;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 8px;
+            cursor: pointer;
+            display: none;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .add-custom-medicine-btn:hover {
+            background-color: #E55A5A;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Vacation-themed decorations */
+        .vacation-icon {
+            position: fixed;
+            opacity: 0.1;
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        .suitcase {
+            top: 50px;
+            right: 50px;
+            width: 100px;
+            height: 100px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23FF6B6B"><path d="M17 6h-2V3c0-.55-.45-1-1-1h-4c-.55 0-1 .45-1 1v3H7c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2 0 .55.45 1 1 1s1-.45 1-1h6c0 .55.45 1 1 1s1-.45 1-1c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM9 4h2v2H9V4zm6 15H9V8h6v11z"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+        
+        .beach {
+            bottom: 50px;
+            left: 50px;
+            width: 120px;
+            height: 120px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23FF6B6B"><path d="M17.55 10.55c-.03.15-.05.31-.05.45 0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2c-.14 0-.3.02-.45.05.35-.59.6-1.23.74-1.92.04-.25-.09-.48-.3-.56-.21-.09-.46 0-.6.21-.28.53-.62 1.02-1.02 1.45-.4.43-.85.79-1.35 1.07zm-2.68 2.68c-.43.4-.79.85-1.07 1.35-.09.21-.13.46-.04.68.09.21.31.34.56.34.1 0 .19-.02.28-.05.69-.14 1.33-.39 1.92-.74-.03.15-.05.3-.05.45 0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2c-.15 0-.3.02-.45.05-.59-.35-1.23-.6-1.92-.74-.25-.05-.48.09-.56.3-.09.21-.04.46.16.63zM18 4c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm-8 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm-6-1c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm2-7c0-1.1-.9-2-2-2s-2 .9-2 2 .9 2 2 2 2-.9 2-2zm9.71 7.71c-.18.18-.29.43-.29.71 0 .28.11.53.29.71.18.18.43.29.71.29.28 0 .53-.11.71-.29.18-.18.29-.43.29-.71 0-.28-.11-.53-.29-.71-.37-.37-1.05-.37-1.42 0zM7 10c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+        
+        .pill {
+            top: 200px;
+            left: 80px;
+            width: 80px;
+            height: 80px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23FF6B6B"><path d="M18.5 5.5c-1.03 0-2.05.39-2.83 1.17L5.17 15.67c-.78.78-.78 2.05 0 2.83.78.78 2.05.78 2.83 0l10.5-10.5c.78-.78 1.17-1.8 1.17-2.83 0-1.03-.39-2.05-1.17-2.83-.78-.78-2.05-.78-2.83 0L9.5 12.5l-1.41-1.41 5.66-5.66c1.56-1.56 4.1-1.56 5.66 0 1.56 1.56 1.56 4.1 0 5.66l-5.66 5.66-1.41-1.41 5.66-5.66c.39-.39.39-1.02 0-1.41-.39-.39-1.02-.39-1.41 0L6.59 16.9c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l10.5-10.5c.39-.39.39-1.02 0-1.41-.78-.39-2.05-.39-2.83 0L8.91 14.1l-1.41-1.41 5.66-5.66c1.17-1.17 3.07-1.17 4.24 0 1.17 1.17 1.17 3.07 0 4.24l-5.66 5.66-1.41-1.41 5.66-5.66c.78-.78.78-2.05 0-2.83-.78-.78-2.05-.78-2.83 0L10.12 13.7l-1.41-1.41 5.66-5.66c.39-.39.39-1.02 0-1.41-.39-.39-1.02-.39-1.41 0L7.3 12.29l-1.41-1.41 5.66-5.66c1.56-1.56 4.1-1.56 5.66 0 1.56 1.56 1.56 4.1 0 5.66l-5.66 5.66-1.41-1.41 5.66-5.66c1.17-1.17 1.17-3.07 0-4.24-1.17-1.17-3.07-1.17-4.24 0L5.17 15.67c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l10.5-10.5c.78-.78.78-2.05 0-2.83-.78-.78-2.05-.78-2.83 0L6.59 16.9c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l10.5-10.5c1.56-1.56 1.56-4.1 0-5.66-1.56-1.56-4.1-1.56-5.66 0L5.17 15.67c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l10.5-10.5c1.17-1.17 3.07-1.17 4.24 0 1.17 1.17 1.17 3.07 0 4.24l-5.66 5.66-1.41-1.41 5.66-5.66c.78-.78.78-2.05 0-2.83z"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 20px;
+                padding: 25px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .medicine-items {
+                grid-template-columns: 1fr;
+            }
+            
+            .vacation-icon {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Vacation-themed decorations -->
+    <div class="vacation-icon suitcase"></div>
+    <div class="vacation-icon beach"></div>
+    <div class="vacation-icon pill"></div>
+
+    <div class="container">
+        <h1>Medicine Checklist</h1>
+        
+        <div class="medicine-type-selector">
+            <button class="medicine-btn active" data-type="allopathic">Allopathic</button>
+            <button class="medicine-btn" data-type="ayurvedic">Ayurvedic</button>
+            <button class="medicine-btn" data-type="homeopathic">Homeopathic</button>
+        </div>
+        
+        <!-- Allopathic Medicine -->
+        <div id="allopathic" class="medicine-categories active">
+            <div class="category-section">
+                <div class="category-title">
+                    <h2>Fever & Pain</h2>
+                    <button class="toggle-btn">+</button>
+                </div>
+                <div class="medicine-content">
+                    <select class="recommended-dropdown">
+                        <option value="">Select recommended medicine...</option>
+                        <option value="paracetamol">Paracetamol (500mg)</option>
+                        <option value="ibuprofen">Ibuprofen (200mg)</option>
+                        <option value="aspirin">Aspirin (325mg)</option>
+                        <option value="dolo">Dolo 650</option>
+                    </select>
+                    <div class="medicine-items">
+                        <div class="medicine-item">
+                            <div class="medicine-info">
+                                <div class="medicine-name">Paracetamol</div>
+                                <div class="medicine-desc">For fever and mild pain relief</div>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="allopathic-fever-1">
+                            </div>
+                        </div>
+                        <div class="medicine-item">
+                            <div class="medicine-info">
+                                <div class="medicine-name">Ibuprofen</div>
+                                <div class="medicine-desc">For pain and inflammation</div>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="allopathic-fever-2">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="add-custom-btn">+ Add Custom Medicine</button>
+                    <input type="text" class="custom-medicine-input" placeholder="Enter custom medicine name">
+                    <button class="add-custom-medicine-btn">Add Medicine</button>
+                </div>
+            </div>
+            
+            <div class="category-section">
+                <div class="category-title">
+                    <h2>Cough & Cold</h2>
+                    <button class="toggle-btn">+</button>
+                </div>
+                <div class="medicine-content" style="display:none;">
+                    <select class="recommended-dropdown">
+                        <option value="">Select recommended medicine...</option>
+                        <option value="dextromethorphan">Dextromethorphan (cough suppressant)</option>
+                        <option value="loratadine">Loratadine (antihistamine)</option>
+                        <option value="benadryl">Benadryl</option>
+                    </select>
+                    <div class="medicine-items">
+                        <div class="medicine-item">
+                            <div class="medicine-info">
+                                <div class="medicine-name">Dextromethorphan</div>
+                                <div class="medicine-desc">Cough suppressant</div>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="allopathic-cough-1">
+                            </div>
+                        </div>
+                        <div class="medicine-item">
+                            <div class="medicine-info">
+                                <div class="medicine-name">Loratadine</div>
+                                <div class="medicine-desc">For allergies and runny nose</div>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="allopathic-cough-2">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="add-custom-btn">+ Add Custom Medicine</button>
+                    <input type="text" class="custom-medicine-input" placeholder="Enter custom medicine name">
+                    <button class="add-custom-medicine-btn">Add Medicine</button>
+                </div>
+            </div>
+            
+            <div class="category-section">
+                <div class="category-title">
+                    <h2>Digestive Issues</h2>
+                    <button class="toggle-btn">+</button>
+                </div>
+                <div class="medicine-content" style="display:none;">
+                    <select class="recommended-dropdown">
+                        <option value="">Select recommended medicine...</option>
+                        <option value="loperamide">Loperamide (for diarrhea)</option>
+                        <option value="omeprazole">Omeprazole (for acidity)</option>
+                        <option value="ors">Oral Rehydration Salts</option>
+                    </select>
+                    <div class="medicine-items">
+                        <div class="medicine-item">
+                            <div class="medicine-info">
+                                <div class="medicine-name">Loperamide</div>
+                                <div class="medicine-desc">For diarrhea</div>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="allopathic-digestive-1">
+                            </div>
+                        </div>
+                        <div class="medicine-item">
+                            <div class="medicine-info">
+                                <div class="medicine-name">Omeprazole</div>
+                                <div class="medicine-desc">For acidity and heartburn</div>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="allopathic-digestive-2">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="add-custom-btn">+ Add Custom Medicine</button>
+                    <input type="text" class="custom-medicine-input" placeholder="Enter custom medicine name">
+                    <button class="add-custom-medicine-btn">Add Medicine</button>
+                </div>
+            </div>
+            
+            <div class="category-section">
+                <div class="category-title">
+                    <h2>First Aid</h2>
+                    <button class="toggle-btn">+</button>
+                </div>
+                <div class="medicine-content" style="display:none;">
+                    <select class="recommended-dropdown">
+                        <option value="">Select recommended item...</option>
+                        <option value="bandaids">Bandaids</option>
+                        <option value="antiseptic">Antiseptic cream</option>
+                        <option value="gauze">Gauze pads</option>
+                    </select>
+                    <div class="medicine-items">
+                        <div class="medicine-item">
+                            <div class="medicine-info">
+                                <div class="medicine-name">Adhesive Bandages</div>
+                                <div class="medicine-desc">Various sizes</div>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="allopathic-firstaid-1">
+                            </div>
+                        </div>
+                        <div class="medicine-item">
+                            <div class="medicine-info">
+                                <div class="medicine-name">Antiseptic Cream</div>
+                                <div class="medicine-desc">For cuts and wounds</div>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="allopathic-firstaid-2">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="add-custom-btn">+ Add Custom Item</button>
+                    <input type="text" class="custom-medicine-input" placeholder="Enter custom first aid item">
+                    <button class="add-custom-medicine-btn">Add Item</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Ayurvedic Medicine -->
+        <div id="ayurvedic" class="medicine-categories">
+            <div class="category-section">
+                <div class="category-title">
+                    <h2>General Wellness</h2>
+                    <button class="toggle-btn">+</button>
+                </div>
+                <div class="medicine-content">
+                    <select class="recommended-dropdown">
+                        <option value="">Select recommended medicine...</option>
+                        <option value="chawanprash">Chawanprash</option>
+                        <option value="triphala">Triphala</option>
+                        <option value="ashwagandha">Ashwagandha</option>
+                    </select>
+                    <div class="medicine-items">
+                        <div class="medicine-item">
+                            <div class="medicine-info">
+                                <div class="medicine-name">Chawanprash</div>
+                                <div class="medicine-desc">Immunity booster</div>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="ayurvedic-wellness-1">
+                            </div>
+                        </div>
+                        <div class="medicine-item">
+                            <div class="medicine-info">
+                                <div class="medicine-name">Triphala</div>
+                                <div class="medicine-desc">Digestive support</div>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="ayurvedic-wellness-2">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="add-custom-btn">+ Add Custom Medicine</button>
+                    <input type="text" class="custom-medicine-input" placeholder="Enter custom medicine name">
+                    <button class="add-custom-medicine-btn">Add Medicine</button>
+                </div>
+            </div>
+            
+            <div class="category-section">
+                <div class="category-title">
+                    <h2>Respiratory Health</h2>
+                    <button class="toggle-btn">+</button>
+                </div>
+                <div class="medicine-content" style="display:none;">
+                    <select class="recommended-dropdown">
+                        <option value="">Select recommended medicine...</option>
+                        <option value="tulsi">Tulsi drops</option>
+                        <option value="sitopaladi">Sitopaladi Churna</option>
+                        <option value="vasaka">Vasaka</option>
+                    </select>
+                    <div class="medicine-items">
+                        <div class="medicine-item">
+                            <div class="medicine-info">
+                                <div class="medicine-name">Tulsi Drops</div>
+                                <div class="medicine-desc">For cough and cold</div>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="ayurvedic-respiratory-1">
+                            </div>
+                        </div>
+                        <div class="medicine-item">
+                            <div class="medicine-info">
+                                <div class="medicine-name">Sitopaladi Churna</div>
+                                <div class="medicine-desc">For respiratory issues</div>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="ayurvedic-respiratory-2">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="add-custom-btn">+ Add Custom Medicine</button>
+                    <input type="text" class="custom-medicine-input" placeholder="Enter custom medicine name">
+                    <button class="add-custom-medicine-btn">Add Medicine</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Homeopathic Medicine -->
+        <div id="homeopathic" class="medicine-categories">
+            <div class="category-section">
+                <div class="category-title">
+                    <h2>Common Ailments</h2>
+                    <button class="toggle-btn">+</button>
+                </div>
+                <div class="medicine-content">
+                    <select class="recommended-dropdown">
+                        <option value="">Select recommended medicine...</option>
+                        <option value="arnica">Arnica Montana</option>
+                        <option value="belladonna">Belladonna</option>
+                        <option value="nuxvomica">Nux Vomica</option>
+                    </select>
+                    <div class="medicine-items">
+                        <div class="medicine-item">
+                            <div class="medicine-info">
+                                <div class="medicine-name">Arnica Montana</div>
+                                <div class="medicine-desc">For bruises and trauma</div>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="homeopathic-common-1">
+                            </div>
+                        </div>
+                        <div class="medicine-item">
+                            <div class="medicine-info">
+                                <div class="medicine-name">Belladonna</div>
+                                <div class="medicine-desc">For sudden fever</div>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="homeopathic-common-2">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="add-custom-btn">+ Add Custom Medicine</button>
+                    <input type="text" class="custom-medicine-input" placeholder="Enter custom medicine name">
+                    <button class="add-custom-medicine-btn">Add Medicine</button>
+                </div>
+            </div>
+            
+            <div class="category-section">
+                <div class="category-title">
+                    <h2>Travel Ailments</h2>
+                    <button class="toggle-btn">+</button>
+                </div>
+                <div class="medicine-content" style="display:none;">
+                    <select class="recommended-dropdown">
+                        <option value="">Select recommended medicine...</option>
+                        <option value="cocculus">Cocculus Indicus</option>
+                        <option value="tabacum">Tabacum</option>
+                    </select>
+                    <div class="medicine-items">
+                        <div class="medicine-item">
+                            <div class="medicine-info">
+                                <div class="medicine-name">Cocculus Indicus</div>
+                                <div class="medicine-desc">For motion sickness</div>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="homeopathic-travel-1">
+                            </div>
+                        </div>
+                        <div class="medicine-item">
+                            <div class="medicine-info">
+                                <div class="medicine-name">Tabacum</div>
+                                <div class="medicine-desc">For nausea and vomiting</div>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="homeopathic-travel-2">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="add-custom-btn">+ Add Custom Medicine</button>
+                    <input type="text" class="custom-medicine-input" placeholder="Enter custom medicine name">
+                    <button class="add-custom-medicine-btn">Add Medicine</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Switch between medicine types
+        const typeButtons = document.querySelectorAll('.medicine-btn');
+        const medicineCategories = document.querySelectorAll('.medicine-categories');
+        
+        typeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                typeButtons.forEach(btn => btn.classList.remove('active'));
+                medicineCategories.forEach(cat => cat.classList.remove('active'));
+                
+                button.classList.add('active');
+                const type = button.dataset.type;
+                document.getElementById(type).classList.add('active');
+            });
+        });
+        
+        // Toggle category sections
+        const toggleButtons = document.querySelectorAll('.toggle-btn');
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const content = button.parentElement.nextElementSibling;
+                if (content.style.display === 'none') {
+                    content.style.display = 'block';
+                    button.textContent = '-';
+                } else {
+                    content.style.display = 'none';
+                    button.textContent = '+';
+                }
+            });
+        });
+        
+        // Add custom medicine functionality
+        const addButtons = document.querySelectorAll('.add-custom-btn');
+        addButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const input = button.nextElementSibling;
+                const addBtn = input.nextElementSibling;
+                
+                if (input.style.display === 'none' || !input.style.display) {
+                    input.style.display = 'block';
+                    addBtn.style.display = 'block';
+                    button.textContent = '- Cancel';
+                    input.focus();
+                } else {
+                    input.style.display = 'none';
+                    addBtn.style.display = 'none';
+                    button.textContent = '+ Add Custom Medicine';
+                    input.value = '';
+                }
+            });
+        });
+        
+        // Handle adding custom medicine
+        const addCustomButtons = document.querySelectorAll('.add-custom-medicine-btn');
+        addCustomButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const input = button.previousElementSibling;
+                const medicineName = input.value.trim();
+                
+                if (medicineName) {
+                    const medicineItems = input.parentElement.querySelector('.medicine-items');
+                    
+                    // Create new medicine item
+                    const newItem = document.createElement('div');
+                    newItem.className = 'medicine-item';
+                    newItem.innerHTML = `
+                        <div class="medicine-info">
+                            <div class="medicine-name">${medicineName}</div>
+                        </div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" checked>
+                        </div>
+                    `;
+                    
+                    // Add to the list
+                    medicineItems.appendChild(newItem);
+                    
+                    // Clear and hide input
+                    input.value = '';
+                    input.style.display = 'none';
+                    button.style.display = 'none';
+                    button.previousElementSibling.previousElementSibling.textContent = '+ Add Custom Medicine';
+                }
+            });
+        });
+        
+        // Handle recommended dropdown selection
+        const dropdowns = document.querySelectorAll('.recommended-dropdown');
+        dropdowns.forEach(dropdown => {
+            dropdown.addEventListener('change', (e) => {
+                if (e.target.value) {
+                    const medicineName = e.target.options[e.target.selectedIndex].text;
+                    const medicineItems = e.target.nextElementSibling;
+                    
+                    // Create new medicine item
+                    const newItem = document.createElement('div');
+                    newItem.className = 'medicine-item';
+                    newItem.innerHTML = `
+                        <div class="medicine-info">
+                            <div class="medicine-name">${medicineName.split(' (')[0]}</div>
+                            ${medicineName.includes('(') ? 
+                              `<div class="medicine-desc">${medicineName.split(' (')[1].replace(')', '')}</div>` : ''}
+                        </div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" checked>
+                        </div>
+                    `;
+                    
+                    // Add to the list
+                    medicineItems.appendChild(newItem);
+                    
+                    // Reset dropdown
+                    e.target.value = '';
+                }
+            });
+        });
+
+        // Also allow adding custom medicine by pressing Enter
+        const customInputs = document.querySelectorAll('.custom-medicine-input');
+        customInputs.forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const addBtn = input.nextElementSibling;
+                    addBtn.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
