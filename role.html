@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PackPal - Collaborative Packing</title>
+    <style>
+        :root {
+            --pastel-red: #ffb3ba;
+            --pastel-orange: #ffdfba;
+            --pastel-yellow: #ffffba;
+            --pastel-green: #baffc9;
+            --pastel-blue: #bae1ff;
+            --vacation-brown: #d4a373;
+            --vacation-cream: #fefae0;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background-color: var(--vacation-cream);
+            margin: 0;
+            padding: 20px;
+            background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M10,50 Q25,30 40,50 T70,50 T100,30" stroke="%23ffb3ba" fill="none" stroke-width="2" opacity="0.3"/></svg>');
+            background-size: 200px 200px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            background-color: var(--pastel-red);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0;
+            color: #333;
+        }
+
+        h1 span {
+            color: var(--vacation-brown);
+        }
+
+        .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        button {
+            background-color: var(--pastel-blue);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: inherit;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background-color: var(--pastel-green);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-family: inherit;
+        }
+
+        .user-card, .task-card {
+            background: var(--pastel-yellow);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        .user-card::before, .task-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: var(--pastel-red);
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            background: var(--pastel-green);
+            margin-left: 5px;
+        }
+
+        .owner-badge { background: var(--vacation-brown); color: white; }
+        .admin-badge { background: var(--pastel-red); }
+        .member-badge { background: var(--pastel-blue); }
+        .viewer-badge { background: #ddd; }
+
+        .hidden {
+            display: none;
+        }
+
+        .task-card::after {
+            content: "✈️";
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 1.5rem;
+            opacity: 0.2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Owner Setup Screen -->
+        <div id="owner-setup" class="panel">
+            <h2>Welcome to PackPal!</h2>
+            <p>Let's get started by setting up your owner account:</p>
+            <form id="setup-form">
+                <input type="text" id="owner-name" placeholder="Your name" required>
+                <button type="submit">Start Packing!</button>
+            </form>
+        </div>
+
+        <!-- Main App (hidden initially) -->
+        <div id="app" class="hidden">
+            <header>
+                <h1>Pack<span>Pal</span></h1>
+                <div id="owner-display"></div>
+            </header>
+
+            <!-- Team Management -->
+            <div class="panel">
+                <h2>Team Members</h2>
+                <div id="user-list"></div>
+                <form id="add-user-form">
+                    <input type="text" id="new-user-name" placeholder="Member name" required>
+                    <select id="new-user-role">
+                        <option value="admin">Admin</option>
+                        <option value="member">Member</option>
+                        <option value="viewer">Viewer</option>
+                    </select>
+                    <button type="submit">Add Member</button>
+                </form>
+            </div>
+
+            <!-- Task Management -->
+            <div class="panel">
+                <h2>Packing Tasks</h2>
+                <button id="add-task-btn">+ Add Task</button>
+                
+                <div id="task-form" class="hidden">
+                    <form id="new-task-form">
+                        <input type="text" id="task-title" placeholder="Task name" required>
+                        <textarea id="task-desc" placeholder="Description"></textarea>
+                        <select id="task-assignee">
+                            <!-- Filled with members -->
+                        </select>
+                        <button type="submit">Create Task</button>
+                        <button type="button" id="cancel-task">Cancel</button>
+                    </form>
+                </div>
+                
+                <div id="task-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data
+        let users = [];
+        let tasks = [];
+        let owner = null;
+
+        // DOM Elements
+        const ownerSetup = document.getElementById('owner-setup');
+        const app = document.getElementById('app');
+        const setupForm = document.getElementById('setup-form');
+        const ownerDisplay = document.getElementById('owner-display');
+        const userList = document.getElementById('user-list');
+        const addUserForm = document.getElementById('add-user-form');
+        const taskList = document.getElementById('task-list');
+        const addTaskBtn = document.getElementById('add-task-btn');
+        const taskForm = document.getElementById('task-form');
+        const newTaskForm = document.getElementById('new-task-form');
+        const cancelTask = document.getElementById('cancel-task');
+        const assigneeSelect = document.getElementById('task-assignee');
+
+        // Initialize
+        function init() {
+            // Check if owner exists in localStorage
+            const savedOwner = localStorage.getItem('packpal_owner');
+            if (savedOwner) {
+                owner = JSON.parse(savedOwner);
+                users = JSON.parse(localStorage.getItem('packpal_users')) || [];
+                tasks = JSON.parse(localStorage.getItem('packpal_tasks')) || [];
+                showApp();
+            }
+        }
+
+        // Show main app
+        function showApp() {
+            ownerSetup.classList.add('hidden');
+            app.classList.remove('hidden');
+            ownerDisplay.innerHTML = `Owner: <strong>${owner.name}</strong> <span class="role-badge owner-badge">Owner</span>`;
+            renderUsers();
+            renderTasks();
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('packpal_owner', JSON.stringify(owner));
+            localStorage.setItem('packpal_users', JSON.stringify(users));
+            localStorage.setItem('packpal_tasks', JSON.stringify(tasks));
+        }
+
+        // Setup owner
+        setupForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            owner = {
+                id: 1,
+                name: document.getElementById('owner-name').value,
+                role: 'owner'
+            };
+            users.push(owner);
+            showApp();
+            saveData();
+        });
+
+        // Add new user
+        addUserForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('new-user-name').value;
+            const role = document.getElementById('new-user-role').value;
+            
+            const newUser = {
+                id: users.length + 1,
+                name,
+                role
+            };
+            
+            users.push(newUser);
+            addUserForm.reset();
+            renderUsers();
+            saveData();
+        });
+
+        // Show task form
+        addTaskBtn.addEventListener('click', function() {
+            taskForm.classList.remove('hidden');
+            populateAssigneeDropdown();
+        });
+
+        // Cancel task form
+        cancelTask.addEventListener('click', function() {
+            taskForm.classList.add('hidden');
+        });
+
+        // Add new task
+        newTaskForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newTask = {
+                id: tasks.length + 1,
+                title: document.getElementById('task-title').value,
+                description: document.getElementById('task-desc').value,
+                assignee: parseInt(document.getElementById('task-assignee').value),
+                status: 'pending'
+            };
+            
+            tasks.push(newTask);
+            newTaskForm.reset();
+            taskForm.classList.add('hidden');
+            renderTasks();
+            saveData();
+        });
+
+        // Render users
+        function renderUsers() {
+            userList.innerHTML = '';
+            users.forEach(user => {
+                if (user.role === 'owner') return;
+                
+                const card = document.createElement('div');
+                card.className = 'user-card';
+                card.innerHTML = `
+                    <div>
+                        <strong>${user.name}</strong>
+                        <span class="role-badge ${user.role}-badge">${user.role}</span>
+                    </div>
+                    <button class="delete-user" data-id="${user.id}">Remove</button>
+                `;
+                userList.appendChild(card);
+            });
+            
+            // Add delete handlers
+            document.querySelectorAll('.delete-user').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (confirm('Remove this member?')) {
+                        users = users.filter(u => u.id !== parseInt(this.dataset.id));
+                        tasks = tasks.filter(t => t.assignee !== parseInt(this.dataset.id));
+                        renderUsers();
+                        renderTasks();
+                        saveData();
+                    }
+                });
+            });
+        }
+
+        // Render tasks
+        function renderTasks() {
+            taskList.innerHTML = '';
+            
+            if (tasks.length === 0) {
+                taskList.innerHTML = '<p>No tasks yet. Add your first packing task!</p>';
+                return;
+            }
+            
+            tasks.forEach(task => {
+                const assignee = users.find(u => u.id === task.assignee);
+                const card = document.createElement('div');
+                card.className = 'task-card';
+                card.innerHTML = `
+                    <h3>${task.title}</h3>
+                    <p>${task.description}</p>
+                    <p><em>Assigned to: ${assignee ? assignee.name : 'Nobody'}</em></p>
+                    <div>
+                        <select class="task-status" data-id="${task.id}">
+                            <option ${task.status === 'pending' ? 'selected' : ''}>pending</option>
+                            <option ${task.status === 'in-progress' ? 'selected' : ''}>in-progress</option>
+                            <option ${task.status === 'completed' ? 'selected' : ''}>completed</option>
+                        </select>
+                        <button class="delete-task" data-id="${task.id}">Delete</button>
+                    </div>
+                `;
+                taskList.appendChild(card);
+            });
+            
+            // Add status change handlers
+            document.querySelectorAll('.task-status').forEach(select => {
+                select.addEventListener('change', function() {
+                    const task = tasks.find(t => t.id === parseInt(this.dataset.id));
+                    if (task) {
+                        task.status = this.value;
+                        saveData();
+                    }
+                });
+            });
+            
+            // Add delete handlers
+            document.querySelectorAll('.delete-task').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (confirm('Delete this task?')) {
+                        tasks = tasks.filter(t => t.id !== parseInt(this.dataset.id));
+                        renderTasks();
+                        saveData();
+                    }
+                });
+            });
+        }
+
+        // Populate assignee dropdown
+        function populateAssigneeDropdown() {
+            assigneeSelect.innerHTML = '';
+            const members = users.filter(u => u.role === 'member' || u.role === 'admin');
+            
+            members.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = user.name;
+                assigneeSelect.appendChild(option);
+            });
+        }
+
+        // Start the app
+        init();
+    </script>
+</body>
+</html>
