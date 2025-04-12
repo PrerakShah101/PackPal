@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vacation Packing List ✈️</title>
+    <style>
+        /* Vacation-themed colors */
+        :root {
+            --pastel-red: #FF9AA2;
+            --pastel-blue: #B5EAD7;
+            --pastel-yellow: #FFDAC1;
+            --pastel-purple: #C7CEEA;
+            --light-sand: #FFF5E6;
+            --dark-sand: #E8D9C5;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Comic Neue', cursive, sans-serif;
+        }
+        
+        @keyframes squiggle {
+            0% { transform: rotate(0deg) scaleX(1); }
+            25% { transform: rotate(1deg) scaleX(1.02); }
+            50% { transform: rotate(-1deg) scaleX(0.98); }
+            75% { transform: rotate(0.5deg) scaleX(1.01); }
+            100% { transform: rotate(0deg) scaleX(1); }
+        }
+        
+        body {
+            background-color: var(--light-sand);
+            color: #5E4B3D;
+            padding: 20px;
+            background-image: radial-gradient(var(--pastel-red) 1px, transparent 1px);
+            background-size: 20px 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            padding: 25px;
+            margin: 20px auto;
+            max-width: 600px;
+            border: 3px dashed var(--pastel-red);
+            position: relative;
+            overflow: hidden;
+            animation: squiggle 8s infinite ease-in-out;
+        }
+        
+        .container::before {
+            content: "";
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border: 2px dotted var(--pastel-blue);
+            border-radius: 20px;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        h1 {
+            color: var(--pastel-red);
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 0px var(--pastel-yellow);
+            position: relative;
+            display: inline-block;
+        }
+        
+        h1::after {
+            content: "✈️";
+            position: absolute;
+            right: -30px;
+            top: -10px;
+            font-size: 1.5rem;
+        }
+        
+        .subtitle {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #8C7B6D;
+            font-style: italic;
+        }
+        
+        .list-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            border: none;
+            background: transparent;
+            width: 100%;
+            margin-bottom: 20px;
+            padding: 10px;
+            text-align: center;
+            color: var(--pastel-red);
+            border-bottom: 2px wavy var(--pastel-purple);
+            outline: none;
+        }
+        
+        .share-section {
+            background: var(--pastel-yellow);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            border: 2px dotted var(--pastel-red);
+        }
+        
+        .share-btn {
+            background: var(--pastel-red);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            box-shadow: 0 3px 0 rgba(0,0,0,0.1);
+        }
+        
+        .share-btn:hover {
+            background: #ff7e8a;
+            transform: translateY(-2px);
+        }
+        
+        .share-url {
+            font-family: monospace;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            word-break: break-all;
+            flex-grow: 1;
+            border: 1px dashed var(--pastel-blue);
+        }
+        
+        .new-item-form {
+            display: flex;
+            margin-bottom: 25px;
+            background: var(--pastel-blue);
+            padding: 5px;
+            border-radius: 50px;
+            border: 2px solid white;
+        }
+        
+        .new-item-input {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 50px 0 0 50px;
+            font-size: 1rem;
+            outline: none;
+            background: white;
+        }
+        
+        .add-btn {
+            background: var(--pastel-purple);
+            color: #5E4B3D;
+            border: none;
+            padding: 0 25px;
+            border-radius: 0 50px 50px 0;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .add-btn:hover {
+            background: #aeb8e0;
+        }
+        
+        .checklist {
+            list-style: none;
+            margin-top: 10px;
+        }
+        
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            border-left: 5px solid var(--pastel-yellow);
+            position: relative;
+        }
+        
+        .checklist-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+        }
+        
+        .checklist-item::before {
+            content: "";
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border: 1px dashed var(--pastel-red);
+            border-radius: 12px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .checklist-item:hover::before {
+            opacity: 1;
+        }
+        
+        .item-checkbox {
+            margin-right: 15px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--pastel-red);
+        }
+        
+        .item-text {
+            flex: 1;
+            font-size: 1.1rem;
+        }
+        
+        .item-text.completed {
+            text-decoration: line-through;
+            color: #8C7B6D;
+            position: relative;
+        }
+        
+        .item-text.completed::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 2px;
+            background: repeating-linear-gradient(
+                to right,
+                var(--pastel-red),
+                var(--pastel-red) 3px,
+                transparent 3px,
+                transparent 6px
+            );
+        }
+        
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--pastel-red);
+            cursor: pointer;
+            font-size: 1.5rem;
+            padding: 5px;
+            margin-left: 10px;
+            transition: transform 0.3s;
+        }
+        
+        .delete-btn:hover {
+            transform: rotate(90deg);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #8C7B6D;
+            background: white;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 2px dashed var(--pastel-blue);
+        }
+        
+        .empty-state p {
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--pastel-red);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateX(200%);
+            transition: transform 0.3s;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .beach-icon {
+            font-size: 1.5rem;
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .share-section {
+                flex-direction: column;
+            }
+            
+            .share-url {
+                width: 100%;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>Packing List</h1>
+        
+        <input type="text" class="list-title" id="listTitle" placeholder="" spellcheck="false">
+        
+        <div class="share-section">
+            <button class="share-btn" id="shareBtn">
+                <span class="beach-icon"></span> Share List
+            </button>
+            <div class="share-url" id="shareUrlDisplay"></div>
+        </div>
+        
+        <form class="new-item-form" id="newItemForm">
+            <input type="text" class="new-item-input" id="newItemInput" placeholder="What to pack...">
+            <button type="submit" class="add-btn">Add Item</button>
+        </form>
+        
+        <ul class="checklist" id="checklist">
+            <!-- Items will be added here dynamically -->
+        </ul>
+        
+        <div class="empty-state" id="emptyState">
+            <p>Your packing list is empty!</p>
+            <p>Start by adding your first item above</p>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification">
+        <span class="beach-icon"></span>
+        <span id="notificationText">Link copied to clipboard!</span>
+    </div>
+
+    <script>
+        // DOM elements
+        const listTitle = document.getElementById('listTitle');
+        const shareBtn = document.getElementById('shareBtn');
+        const shareUrlDisplay = document.getElementById('shareUrlDisplay');
+        const newItemForm = document.getElementById('newItemForm');
+        const newItemInput = document.getElementById('newItemInput');
+        const checklist = document.getElementById('checklist');
+        const emptyState = document.getElementById('emptyState');
+        const notification = document.getElementById('notification');
+        const notificationText = document.getElementById('notificationText');
+        
+        // Current checklist data
+        let currentChecklist = {
+            title: 'My Vacation Checklist',
+            items: []
+        };
+        
+        // Generate a unique ID for this checklist
+        let listId = generateId();
+        
+        // Vacation-themed emoji for items
+        const vacationEmojis = ['👙', '🩴', '🧴', '🧳', '🕶️', '🧢', '📷', '📱', '🔋', '💊', '🧦', '👕', '👖', '🧥', '🎒'];
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check URL for existing list ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlListId = urlParams.get('list');
+            
+            if (urlListId) {
+                listId = urlListId;
+                loadChecklist();
+            } else {
+                // New checklist - update URL
+                updateUrl();
+                saveChecklist();
+            }
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Update share URL display
+            updateShareUrl();
+        });
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Save title when changed
+            listTitle.addEventListener('blur', () => {
+                currentChecklist.title = listTitle.value || 'My Vacation Checklist';
+                saveChecklist();
+            });
+            
+            listTitle.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    listTitle.blur();
+                }
+            });
+            
+            // Share button
+            shareBtn.addEventListener('click', copyShareLink);
+            
+            // Add new item
+            newItemForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const text = newItemInput.value.trim();
+                
+                if (text) {
+                    const randomEmoji = vacationEmojis[Math.floor(Math.random() * vacationEmojis.length)];
+                    currentChecklist.items.push({
+                        text: `${randomEmoji} ${text}`,
+                        completed: false,
+                        id: generateId()
+                    });
+                    
+                    saveChecklist();
+                    renderItems();
+                    
+                    // Clear input
+                    newItemInput.value = '';
+                    newItemInput.focus();
+                    
+                    // Show fun notification
+                    showNotification(`Added ${text} to your list!`, '🎉');
+                }
+            });
+            
+            // Listen for changes from other tabs
+            window.addEventListener('storage', (e) => {
+                if (e.key === `vacation_list_${listId}`) {
+                    loadChecklist();
+                }
+            });
+        }
+        
+        // Load checklist from localStorage
+        function loadChecklist() {
+            const savedData = localStorage.getItem(`vacation_list_${listId}`);
+            
+            if (savedData) {
+                currentChecklist = JSON.parse(savedData);
+                listTitle.value = currentChecklist.title;
+                renderItems();
+                updateUrl();
+                updateShareUrl();
+                showNotification("Packing list loaded!", "🧳");
+            } else {
+                // If no data found but URL has ID, it's a shared list that hasn't been created yet
+                if (new URLSearchParams(window.location.search).has('list')) {
+                    currentChecklist = {
+                        title: 'Shared Vacation List',
+                        items: []
+                    };
+                    saveChecklist();
+                }
+            }
+        }
+        
+        // Save checklist to localStorage
+        function saveChecklist() {
+            localStorage.setItem(`vacation_list_${listId}`, JSON.stringify(currentChecklist));
+            
+            // Trigger storage event to sync across tabs
+            const event = new StorageEvent('storage', {
+                key: `vacation_list_${listId}`,
+                newValue: JSON.stringify(currentChecklist)
+            });
+            window.dispatchEvent(event);
+        }
+        
+        // Render items to the DOM
+        function renderItems() {
+            // Clear existing items
+            checklist.innerHTML = '';
+            
+            if (currentChecklist.items.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            
+            // Add each item to the list
+            currentChecklist.items.forEach((item, index) => {
+                const listItem = document.createElement('li');
+                listItem.className = 'checklist-item';
+                
+                listItem.innerHTML = `
+                    <input type="checkbox" class="item-checkbox" ${item.completed ? 'checked' : ''}>
+                    <span class="item-text ${item.completed ? 'completed' : ''}">${item.text}</span>
+                    <button class="delete-btn">×</button>
+                `;
+                
+                checklist.appendChild(listItem);
+                
+                // Add event listeners
+                const checkbox = listItem.querySelector('.item-checkbox');
+                const deleteBtn = listItem.querySelector('.delete-btn');
+                
+                checkbox.addEventListener('change', () => {
+                    currentChecklist.items[index].completed = checkbox.checked;
+                    saveChecklist();
+                    renderItems();
+                    showNotification(checkbox.checked ? "Packed! 🎒" : "Unpacked! 😅");
+                });
+                
+                deleteBtn.addEventListener('click', () => {
+                    currentChecklist.items.splice(index, 1);
+                    saveChecklist();
+                    renderItems();
+                    showNotification("Item removed! 🗑️");
+                });
+            });
+        }
+        
+        // Update URL with current list ID
+        function updateUrl() {
+            const newUrl = `${window.location.pathname}?list=${listId}`;
+            window.history.replaceState({}, '', newUrl);
+            updateShareUrl();
+        }
+        
+        // Update the share URL display
+        function updateShareUrl() {
+            shareUrlDisplay.textContent = `${window.location.origin}${window.location.pathname}?list=${listId}`;
+        }
+        
+        // Copy share link to clipboard
+        function copyShareLink() {
+            const shareUrl = `${window.location.origin}${window.location.pathname}?list=${listId}`;
+            
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                showNotification('Share link copied! ✈️', '📋');
+            }).catch(() => {
+                // Fallback for older browsers
+                const input = document.createElement('input');
+                input.value = shareUrl;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                showNotification('Share link copied! ✈️', '📋');
+            });
+        }
+        
+        // Show notification
+        function showNotification(message, emoji = '✨') {
+            notificationText.textContent = message;
+            notification.querySelector('.beach-icon').textContent = emoji;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 2000);
+        }
+        
+        // Generate a random ID
+        function generateId() {
+            return Math.random().toString(36).substring(2, 9);
+        }
+    </script>
+</body>
+</html>
