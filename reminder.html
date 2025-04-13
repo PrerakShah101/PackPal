@@ -268,6 +268,16 @@
     </div>
 
     <script>
+        // Request notification permission when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    if ('Notification' in window) {
+        if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+            Notification.requestPermission();
+        }
+    }
+    
+    // Rest of your existing DOMContentLoaded code...
+});
         document.addEventListener('DOMContentLoaded', function() {
             const taskInput = document.getElementById('taskInput');
             const dateInput = document.getElementById('dateInput');
@@ -418,17 +428,26 @@
             }
             
             function triggerReminder(reminder) {
-                reminder.notified = true;
-                saveReminders();
-                showNotification(`⏰ Time to pack: ${reminder.task}`);
-                
-                // Play a little sound
-                const audio = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...');
-                audio.volume = 0.2;
-                audio.play().catch(e => console.log('Audio play failed:', e));
-                
-                renderReminders();
-            }
+    // Show system notification
+    if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('⏰ PackPal Reminder', {
+            body: `Don't forget to pack: ${reminder.task}`,
+            icon: 'path/to/your/icon.png' // Optional icon
+        });
+    }
+    
+    // Show in-page notification
+    showNotification(`⏰ Reminder: ${reminder.task}`);
+    
+    // Play notification sound
+    const audio = new Audio('notification-sound.mp3');
+    audio.play().catch(e => console.log('Audio play failed:', e));
+    
+    // Mark as notified
+    reminder.notified = true;
+    saveReminders();
+    renderReminders();
+    }
             
             function clearActiveTimeouts() {
                 activeTimeouts.forEach(timeoutId => clearTimeout(timeoutId));
@@ -436,17 +455,19 @@
             }
             
             function showNotification(message) {
-                notificationText.textContent = message;
-                notification.style.display = 'block';
-                
-                // Auto-hide after 5 seconds
-                setTimeout(() => {
-                    notification.style.display = 'none';
-                }, 5000);
-            }
-            
-            // Setup timeouts for all reminders on page load
-            setupAllReminderTimeouts();
+    notificationText.textContent = message;
+    notification.style.display = 'block';
+    
+    // Add vibration if supported
+    if ('vibrate' in navigator) {
+        navigator.vibrate([200, 100, 200]);
+    }
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        notification.style.display = 'none';
+    }, 5000);
+}   
         });
     </script>
 </body>
