@@ -656,6 +656,36 @@
                 height: 35px;
             }
         }
+        .export-button {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    margin: 25px 0;
+    background-color: #ff4d6d;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.export-button:hover {
+    background-color: #ff3355;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 139, 0.3);
+}
+
+.dark-mode .export-button {
+    background-color: #ff7e9d;
+}
+
+.dark-mode .export-button:hover {
+    background-color: #ff6b8b;
+}
+
     </style>
 </head>
 <body>
@@ -820,7 +850,8 @@
                 </label>
             </div>
         </div>
-
+        <button id="reminder-btn" class="export-button" style="margin-bottom: 15px;">➕ Add Reminders</button>
+        <button id="export-btn" class="export-button">Export Packing List</button>
         <div class="footer">
             <p>Happy travels with PackPal! ✈️</p>
         </div>
@@ -828,6 +859,86 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Reminder button functionality
+document.getElementById('reminder-btn').addEventListener('click', function() {
+    window.location.href = 'reminder.html'; // Make sure this matches your reminder page filename
+});
+            // Export button functionality
+document.getElementById('export-btn').addEventListener('click', function() {
+    // Get all checklist items
+    const items = Array.from(document.querySelectorAll('.checklist-item')).map(item => {
+        const checkbox = item.querySelector('.checkbox');
+        const label = item.querySelector('.item-label');
+        const assignedTo = item.querySelector('.assigned-to');
+        
+        return {
+            name: label.textContent.split('Assigned to:')[0].trim(),
+            status: checkbox.checked ? 'Packed' : 'Unpacked',
+            assignedTo: assignedTo ? assignedTo.textContent.replace('Assigned to:', '').trim() : 'You'
+        };
+    });
+
+    // Get all medicine items
+    const medicines = Array.from(document.querySelectorAll('#medicine-list .checklist-item')).map(item => {
+        const checkbox = item.querySelector('.checkbox');
+        const label = item.querySelector('.item-label');
+        const assignedTo = item.querySelector('.assigned-to');
+        
+        return {
+            name: label.textContent.split('Assigned to:')[0].trim(),
+            status: checkbox.checked ? 'Packed' : 'Unpacked',
+            assignedTo: assignedTo ? assignedTo.textContent.replace('Assigned to:', '').trim() : 'You'
+        };
+    });
+
+    // Combine all items
+    const allItems = [...items, ...medicines];
+    
+    // Convert to CSV
+    let csv = 'Item Name,Status\n';
+    allItems.forEach(item => {
+        csv += `"${item.name}","${item.status}"\n`;
+    });
+
+    // Create download link
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'packing-list.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+});
+
+             // Check for transferred packing list data
+             const transferredData = localStorage.getItem('packingListTransfer');
+            if (transferredData) {
+                const packingList = JSON.parse(transferredData);
+                
+                // Add items to Self-Care Essentials section
+                const essentialsSection = document.querySelector('#toiletries-title').nextElementSibling;
+                
+                packingList.items.forEach((item, index) => {
+                    const newItem = document.createElement('div');
+                    newItem.className = 'checklist-item';
+                    newItem.innerHTML = `
+                        <input type="checkbox" class="checkbox" id="transferred-item-${index}">
+                        <label for="transferred-item-${index}" class="item-label">
+                            ${item.name}
+                            <div class="assigned-to">Assigned to: You</div>
+                        </label>
+                    `;
+                    essentialsSection.parentNode.insertBefore(newItem, essentialsSection.nextSibling);
+                });
+                
+                // Remove the transferred data
+                localStorage.removeItem('packingListTransfer');
+                
+                // Update progress
+                updateProgress();
+            }
             // Style selection functionality
             const styleOptions = document.querySelectorAll('.style-option');
             let selectedStyle = null;
